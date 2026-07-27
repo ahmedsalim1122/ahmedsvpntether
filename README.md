@@ -20,9 +20,11 @@ Route your iPhone hotspot traffic through your VPN automatically. Zero client-si
 ## Installation
 
 ### Via Sileo
-1. Add repository: `https://ahmedsalim1122.github.io/ahmedsvpntether-repo`
-2. Search for "AhmedVPN Tether"
-3. Install and respring
+1. Open Sileo → **Sources** → **+**
+2. Add: `https://ahmedsalim1122.github.io/ahmedsvpntether-repo`
+3. Search for **"AhmedVPN Tether"**
+4. Install and respring
+5. Go to **Settings → AhmedVPN Tether** to activate
 
 ### Build from source
 ```bash
