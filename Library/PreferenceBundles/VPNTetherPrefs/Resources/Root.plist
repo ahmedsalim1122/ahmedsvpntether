@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>title</key>
+	<string>AhmedVPN Tether</string>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isControl</key>
+				<true/>
+				<key>label</key>
+				<string>Enable VPN Tethering</string>
+				<key>key</key>
+				<string>vpntether_enabled</string>
+				<key>default</key>
+				<false/>
+			</dict>
+		</dict>
+		<dict>
+			<key>footerText</key>
+			<string>Routes all hotspot traffic through your VPN. Requires a VPN app connected.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isStaticTextCell</key>
+				<true/>
+				<key>label</key>
+				<string>MTU Management</string>
+				<key>detail</key>
+				<string>Auto-fixes utun MTU for maximum speed</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isStaticTextCell</key>
+				<true/>
+				<key>label</key>
+				<string>TCP Tuning</string>
+				<key>detail</key>
+				<string>Optimizes buffers, MSS, and congestion</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>footerText</key>
+			<string>────────────────────────────────</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isStaticTextCell</key>
+				<true/>
+				<key>label</key>
+				<string>Status</string>
+				<key>detail</key>
+				<string>vpntether_status</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isStaticTextCell</key>
+				<true/>
+				<key>label</key>
+				<string>utun MTU</string>
+				<key>detail</key>
+				<string>vpntether_mtu</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isStaticTextCell</key>
+				<true/>
+				<key>label</key>
+				<string>Hotspot Clients</string>
+				<key>detail</key>
+				<string>vpntether_clients</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isStaticTextCell</key>
+				<true/>
+				<key>label</key>
+				<string>License</string>
+				<key>detail</key>
+				<string>vpntether_license</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>footerText</key>
+			<string>────────────────────────────────</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isStaticTextCell</key>
+				<true/>
+				<key>label</key>
+				<string>Developed by Ahmed Alhamadany</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<dict>
+				<key>isButtonCell</key>
+				<true/>
+				<key>label</key>
+				<string>Respring</string>
+				<key>action</key>
+				<string>respring</string>
+			</dict>
+		</dict>
+	</array>
+</dict>
+</plist>

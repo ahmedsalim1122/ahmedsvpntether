@@ -1,0 +1,11 @@
+#!/bin/bash
+# Stop daemon
+launchctl bootout system/com.vpntether.daemon 2>/dev/null
+
+# Kill any running instances
+pkill -f "vpntether_manager" 2>/dev/null
+
+# Remove daemon log
+rm -rf /var/log/vpntether/ 2>/dev/null
+
+echo "AhmedVPN Tether removed."

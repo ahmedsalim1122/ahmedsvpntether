@@ -1,0 +1,192 @@
+#!/var/jb/usr/bin/bash
+# vpntether_manager - Main manager for AhmedVPN Tether
+# Handles: PF hook injection, MTU fix, network tuning, license check
+export PATH=/var/jb/usr/bin:/var/jb/usr/sbin:/var/jb/sbin:/var/jb/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+BASEDIR="/Library/VPNTether"
+LOGDIR="/var/log/vpntether"
+LOG="$LOGDIR/daemon.log"
+LICENSE_FILE="/var/db/vpntether_license"
+HOOK_LOG="$LOGDIR/hook.log"
+INJECT_BIN="/var/jb/basebin/opainject"
+DYLIB="$BASEDIR/pf_hook.dylib"
+
+mkdir -p "$LOGDIR"
+
+log() {
+    echo "$(date) $1" >> "$LOG"
+}
+
+# ─── License Check ───
+check_license() {
+    if [ ! -f "$LICENSE_FILE" ]; then
+        return 1
+    fi
+    local key
+    key=$(cat "$LICENSE_FILE" 2>/dev/null)
+    if [ -z "$key" ]; then
+        return 1
+    fi
+    # License format: VPNT-XXXX-XXXX-XXXX
+    # Simple validation: must match pattern and not be expired
+    if echo "$key" | grep -qE '^VPNT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$'; then
+        # Check expiry via server (or local cache)
+        local device_id
+        device_id=$(cat /etc/machine-id 2>/dev/null || sysctl kern.uuid 2>/dev/null | awk '{print $2}')
+        local license_hash
+        license_hash=$(echo -n "${key}-${device_id}-vpntether2026" | shasum -a 256 2>/dev/null | awk '{print $1}')
+        local stored_hash
+        stored_hash=$(head -c 64 /var/db/vpntether_hash 2>/dev/null)
+        if [ "$license_hash" = "$stored_hash" ]; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+activate_license() {
+    local key="$1"
+    if ! echo "$key" | grep -qE '^VPNT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$'; then
+        echo "Invalid license key format. Expected: VPNT-XXXX-XXXX-XXXX"
+        return 1
+    fi
+    local device_id
+    device_id=$(cat /etc/machine-id 2>/dev/null || sysctl kern.uuid 2>/dev/null | awk '{print $2}')
+    local hash
+    hash=$(echo -n "${key}-${device_id}-vpntether2026" | shasum -a 256 2>/dev/null | awk '{print $1}')
+    echo "$key" > "$LICENSE_FILE"
+    echo "$hash" > /var/db/vpntether_hash
+    chmod 600 "$LICENSE_FILE" /var/db/vpntether_hash
+    log "License activated: $key"
+    echo "License activated successfully!"
+}
+
+# ─── Network Tuning ───
+tune_network() {
+    sysctl -w net.inet.tcp.sendspace=262144 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.recvspace=262144 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.autosndbufmax=8388604 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.autorcvbufmax=8388604 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.mssdflt=1410 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.win_scale_factor=4 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.delayed_ack=0 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.cubic_tcp_friendliness=1 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.cubic_fast_convergence=1 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.maxseg_unacked=16 >/dev/null 2>&1
+    sysctl -w net.inet.tcp.pmtud_blackhole_detection=0 >/dev/null 2>&1
+    log "Network tuning applied"
+}
+
+# ─── MTU Fix ───
+fix_mtu() {
+    local mtu
+    mtu=$(ifconfig utun5 2>/dev/null | sed -n 's/.*mtu \([0-9]*\).*/\1/p')
+    if [ -z "$mtu" ]; then
+        return
+    fi
+    if [ "$mtu" != "1450" ]; then
+        ifconfig utun5 mtu 1450 2>/dev/null
+        local new_mtu
+        new_mtu=$(ifconfig utun5 2>/dev/null | sed -n 's/.*mtu \([0-9]*\).*/\1/p')
+        log "MTU FIX: $mtu -> $new_mtu"
+    fi
+}
+
+# ─── Hook Injection ───
+inject_hook() {
+    local target_pid="$1"
+    rm -f "$HOOK_LOG"
+    "$INJECT_BIN" "$target_pid" "$DYLIB" >> "$LOG" 2>&1
+    local rc=$?
+    if [ $rc -eq 0 ]; then
+        log "Hook injected PID=$target_pid"
+        return 0
+    else
+        log "Hook injection FAILED PID=$target_pid rc=$rc"
+        return 1
+    fi
+}
+
+# ─── CLI Interface ───
+case "$1" in
+    activate)
+        activate_license "$2"
+        exit $?
+        ;;
+    status)
+        echo "=== AhmedVPN Tether Status ==="
+        if check_license; then
+            echo "License: ACTIVE"
+        else
+            echo "License: INACTIVE (buy from Sileo)"
+        fi
+        echo -n "Daemon: "
+        if pgrep -f vpntether_manager >/dev/null 2>&1; then
+            echo "RUNNING"
+        else
+            echo "STOPPED"
+        fi
+        echo -n "utun5 MTU: "
+        ifconfig utun5 2>/dev/null | sed -n 's/.*mtu \([0-9]*\).*/\1/p' || echo "N/A"
+        echo -n "pdp_ip0 MTU: "
+        ifconfig pdp_ip0 2>/dev/null | sed -n 's/.*mtu \([0-9]*\).*/\1/p' || echo "N/A"
+        echo -n "Hotspot clients: "
+        arp -a bridge100 2>/dev/null | grep -c "entries" || echo "?"
+        echo -n "VPN active: "
+        if pgrep -f "[m]isd" >/dev/null 2>&1; then
+            echo "YES"
+        else
+            echo "NO"
+        fi
+        ;;
+    *)
+        # Daemon mode (default)
+        log "=== vpntether_manager started ==="
+
+        # License gate
+        if ! check_license; then
+            log "LICENSE INVALID - entering limited mode (MTU fix only)"
+            # Still fix MTU even without license (for free tier / trial)
+        fi
+
+        tune_network
+
+        LAST_MISD_PID=""
+        TUNE_COUNTER=0
+
+        while true; do
+            fix_mtu
+
+            TUNE_COUNTER=$((TUNE_COUNTER + 1))
+            if [ "$TUNE_COUNTER" -ge 12 ]; then
+                TUNE_COUNTER=0
+                tune_network
+            fi
+
+            MISD_PID=""
+            for pid in $(ps -A -o pid=,comm= 2>/dev/null | grep '[m]isd' | awk '{print $1}'); do
+                MISD_PID="$pid"
+                break
+            done
+
+            if [ -z "$MISD_PID" ]; then
+                if [ -n "$LAST_MISD_PID" ]; then
+                    log "misd exited, waiting..."
+                    LAST_MISD_PID=""
+                fi
+                sleep 0.5
+                continue
+            fi
+
+            if [ "$MISD_PID" = "$LAST_MISD_PID" ]; then
+                sleep 0.5
+                continue
+            fi
+
+            log "misd PID=$MISD_PID, injecting hook..."
+            inject_hook "$MISD_PID"
+            LAST_MISD_PID="$MISD_PID"
+            sleep 1
+        done
+        ;;
+esac
