@@ -46,7 +46,7 @@ Format: `VPNT-XXXX-XXXX-XXXX`
 3. Applies TCP tuning for optimal throughput
 4. All hotspot traffic routes through VPN tunnel automatically
 
-## Speed Results
+## Speed Results (iphone 8 plus)
 | Metric | Value |
 |--------|-------|
 | Download | ~80 Mbps |
