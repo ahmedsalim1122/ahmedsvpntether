@@ -9,7 +9,7 @@ LOG="$LOGDIR/daemon.log"
 LICENSE_FILE="/var/db/vpntether_license"
 HOOK_LOG="$LOGDIR/hook.log"
 INJECT_BIN="/var/jb/basebin/opainject"
-DYLIB="$BASEDIR/pf_hook.dylib"
+DYLIB="/var/jb/Library/VPNTether/pf_hook.dylib"
 
 mkdir -p "$LOGDIR"
 
@@ -34,7 +34,7 @@ check_license() {
         local device_id
         device_id=$(cat /etc/machine-id 2>/dev/null || sysctl kern.uuid 2>/dev/null | awk '{print $2}')
         local license_hash
-        license_hash=$(echo -n "${key}-${device_id}-vpntether2026" | shasum -a 256 2>/dev/null | awk '{print $1}')
+        license_hash=$(echo -n "${key}-${device_id}-vpntether2026" | sha256sum 2>/dev/null | awk '{print $1}')
         local stored_hash
         stored_hash=$(head -c 64 /var/db/vpntether_hash 2>/dev/null)
         if [ "$license_hash" = "$stored_hash" ]; then
@@ -53,7 +53,7 @@ activate_license() {
     local device_id
     device_id=$(cat /etc/machine-id 2>/dev/null || sysctl kern.uuid 2>/dev/null | awk '{print $2}')
     local hash
-    hash=$(echo -n "${key}-${device_id}-vpntether2026" | shasum -a 256 2>/dev/null | awk '{print $1}')
+    hash=$(echo -n "${key}-${device_id}-vpntether2026" | sha256sum 2>/dev/null | awk '{print $1}')
     echo "$key" > "$LICENSE_FILE"
     echo "$hash" > /var/db/vpntether_hash
     chmod 600 "$LICENSE_FILE" /var/db/vpntether_hash
@@ -143,10 +143,34 @@ case "$1" in
         # Daemon mode (default)
         log "=== vpntether_manager started ==="
 
-        # License gate
         if ! check_license; then
-            log "LICENSE INVALID - entering limited mode (MTU fix only)"
-            # Still fix MTU even without license (for free tier / trial)
+            log "LICENSE INVALID - waiting for activation"
+            STATUS_FILE="/var/log/vpntether/status"
+            echo "Daemon: Waiting for license" > "$STATUS_FILE"
+            echo "VPN: Not active (need license)" >> "$STATUS_FILE"
+            echo "Clients: 0" >> "$STATUS_FILE"
+            chmod 644 "$STATUS_FILE"
+            tune_network
+            while true; do
+                # Check for license activation request from app
+                if [ -f "/var/log/vpntether/activate_request" ]; then
+                    REQ_KEY=$(cat /var/log/vpntether/activate_request 2>/dev/null | tr -d '[:space:]')
+                    if echo "$REQ_KEY" | grep -qE '^VPNT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$'; then
+                        activate_license "$REQ_KEY"
+                        echo "License activated successfully!" > /var/log/vpntether/activate_result
+                    else
+                        echo "Invalid key format" > /var/log/vpntether/activate_result
+                    fi
+                    rm -f /var/log/vpntether/activate_request
+                    # Re-check
+                    if check_license; then
+                        log "License activated, restarting in full mode"
+                        break
+                    fi
+                fi
+                sleep 2
+            done
+            log "LICENSE VALID - starting full mode"
         fi
 
         tune_network
@@ -162,6 +186,31 @@ case "$1" in
                 TUNE_COUNTER=0
                 tune_network
             fi
+
+            # Check for license activation request from app
+            if [ -f "/var/log/vpntether/activate_request" ]; then
+                REQ_KEY=$(cat /var/log/vpntether/activate_request 2>/dev/null | tr -d '[:space:]')
+                if echo "$REQ_KEY" | grep -qE '^VPNT-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$'; then
+                    activate_license "$REQ_KEY"
+                    echo "License activated successfully!" > /var/log/vpntether/activate_result
+                else
+                    echo "Invalid key format" > /var/log/vpntether/activate_result
+                fi
+                rm -f /var/log/vpntether/activate_request
+            fi
+
+            # Write status file for app (runs as root, so has arp access)
+            STATUS_FILE="/var/log/vpntether/status"
+            MTU_VAL=$(ifconfig utun5 2>/dev/null | sed -n 's/.*mtu \([0-9]*\).*/\1/p')
+            CLIENTS=$(arp -a 2>/dev/null | grep bridge100 | grep -v incomplete | grep -v ff:ff:ff:ff:ff:ff | wc -l | tr -d ' ')
+            if [ -n "$MTU_VAL" ]; then
+                echo "VPN: Active (MTU: $MTU_VAL)" > "$STATUS_FILE"
+            else
+                echo "VPN: Not active" > "$STATUS_FILE"
+            fi
+            echo "Clients: $CLIENTS" >> "$STATUS_FILE"
+            echo "License: VALID" >> "$STATUS_FILE"
+            chmod 644 "$STATUS_FILE"
 
             MISD_PID=""
             for pid in $(ps -A -o pid=,comm= 2>/dev/null | grep '[m]isd' | awk '{print $1}'); do

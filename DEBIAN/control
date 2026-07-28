@@ -1,7 +1,7 @@
 Package: com.alhamadany.ahmed.vpntether
 Name: AhmedVPN Tether
 Depends: firmware (>= 16.0),ellekit
-Architecture: iphoneos-arm
+Architecture: iphoneos-arm64
 Description: Route iPhone hotspot traffic through VPN automatically. Zero client configuration. Works with all VPN apps.
 Maintainer: Ahmed Alhamadany <ahmed@alhamadany.dev>
 Author: Ahmed Alhamadany

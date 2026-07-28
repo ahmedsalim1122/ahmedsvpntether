@@ -1,14 +1,8 @@
-#!/bin/bash
-chmod 755 /Library/VPNTether/pfinject_daemon.sh
-chmod 755 /Library/VPNTether/pf_hook.dylib
-chmod 755 /usr/libexec/vpntether/vpntether_manager
-chmod 644 /Library/LaunchDaemons/com.vpntether.daemon.plist
-
-# Kill old daemon if running
-launchctl bootout system/com.vpntether.daemon 2>/dev/null
-launchctl bootout system/com.local.pfinject 2>/dev/null
-
-# Reload new daemon
-launchctl bootstrap system /Library/LaunchDaemons/com.vpntether.daemon.plist 2>/dev/null
-
-echo "AhmedVPN Tether installed. Toggle in Settings app."
+#!/var/jb/usr/bin/bash
+export PATH=/var/jb/usr/bin:/var/jb/usr/sbin:/var/jb/sbin:/var/jb/bin:/usr/bin:/bin:/usr/sbin:/sbin
+chmod 755 /var/jb/usr/libexec/vpntether/vpntether_manager 2>/dev/null || true
+chmod 644 /var/jb/Library/LaunchDaemons/com.vpntether.daemon.plist 2>/dev/null || true
+launchctl bootout system/com.vpntether.daemon 2>/dev/null || true
+launchctl bootstrap system /var/jb/Library/LaunchDaemons/com.vpntether.daemon.plist 2>/dev/null || true
+echo "AhmedVPN Tether installed. Run: vpntether_manager activate VPNT-XXXX-XXXX-XXXX"
+exit 0

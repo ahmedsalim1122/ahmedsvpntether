@@ -7,7 +7,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/var/jb/usr/bin/bash</string>
-        <string>/Library/VPNTether/pfinject_daemon.sh</string>
+        <string>/var/jb/usr/libexec/vpntether/vpntether_manager</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
