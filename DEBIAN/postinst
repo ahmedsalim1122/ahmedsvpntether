@@ -1,8 +1,0 @@
-#!/var/jb/usr/bin/bash
-export PATH=/var/jb/usr/bin:/var/jb/usr/sbin:/var/jb/sbin:/var/jb/bin:/usr/bin:/bin:/usr/sbin:/sbin
-chmod 755 /var/jb/usr/libexec/vpntether/vpntether_manager 2>/dev/null || true
-chmod 644 /var/jb/Library/LaunchDaemons/com.vpntether.daemon.plist 2>/dev/null || true
-launchctl bootout system/com.vpntether.daemon 2>/dev/null || true
-launchctl bootstrap system /var/jb/Library/LaunchDaemons/com.vpntether.daemon.plist 2>/dev/null || true
-echo "AhmedVPN Tether installed. Run: vpntether_manager activate VPNT-XXXX-XXXX-XXXX"
-exit 0

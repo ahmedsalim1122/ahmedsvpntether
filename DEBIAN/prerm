@@ -1,5 +1,0 @@
-#!/var/jb/usr/bin/bash
-export PATH=/var/jb/usr/bin:/var/jb/usr/sbin:/var/jb/sbin:/var/jb/bin:/usr/bin:/bin:/usr/sbin:/sbin
-launchctl bootout system/com.vpntether.daemon 2>/dev/null || true
-killall vpntether_manager 2>/dev/null || true
-exit 0

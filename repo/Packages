@@ -1,0 +1,14 @@
+Package: com.alhamadany.ahmed.vpntether.sileo
+Version: 2.0.0
+Architecture: iphoneos-arm64
+Maintainer: Ahmed Alhamadany
+Section: Networking
+Name: AhmedVPN Tether (SILEO)
+Depends: firmware (>= 15.0)
+Filename: debs/com.alhamadany.ahmed.vpntether_sileo_2.0.0.deb
+Size: 254608
+MD5sum: 
+SHA1: 
+SHA256: 
+Description: Per-device license required to activate
+
