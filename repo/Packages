@@ -1,3 +1,17 @@
+Package: com.alhamadany.ahmed.vpntether
+Version: 2.0.0
+Architecture: iphoneos-arm64
+Maintainer: Ahmed Alhamadany
+Section: Networking
+Name: AhmedVPN Tether (HAVOC)
+Depends: firmware (>= 15.0)
+Filename: debs/com.alhamadany.ahmed.vpntether_havoc_2.0.0.deb
+Size: 254104
+MD5sum: 
+SHA1: 
+SHA256: 
+Description: Full paid version - No license required
+
 Package: com.alhamadany.ahmed.vpntether.sileo
 Version: 2.0.0
 Architecture: iphoneos-arm64
