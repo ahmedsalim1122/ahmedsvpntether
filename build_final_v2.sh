@@ -90,20 +90,17 @@ Name: AhmedVPN Tether (HAVOC)
 Version: 2.0.0
 Architecture: iphoneos-arm64
 Depends: firmware (>= 15.0)
-Section: Networking
+Section: Tweaks
 Maintainer: Ahmed Alhamadany
-Description: Full paid version - No license required
- Forces all hotspot traffic through active VPN tunnel.
+Description: Forces all hotspot traffic through your VPN tunnel — no client setup needed.
  .
  Features:
-  - Zero-config auto-detect of VPN interface
-  - Kernel-bypass NAT for source-filtering VPNs
+  - Zero-config auto-detection of VPN & hotspot interfaces
+  - Kernel-level NAT engine (TCP/UDP/ICMP)
   - TCP MSS clamping for optimal MTU
-  - Full IPv4 NAT (TCP/UDP/ICMP)
-  - Status display app with Iraq flag
+  - Real-time status app with Iraq flag & Refresh button
   - WhatsApp support button
- .
- This HAVOC version does not require a license key.
+  - No license required
 CTRL
 
 # Havoc postinst
@@ -134,15 +131,21 @@ Name: AhmedVPN Tether (SILEO)
 Version: 2.0.0
 Architecture: iphoneos-arm64
 Depends: firmware (>= 15.0)
-Section: Networking
+Section: Tweaks
 Maintainer: Ahmed Alhamadany
-Description: Per-device license required to activate
- Forces all hotspot traffic through active VPN tunnel.
+Description: Per-device license required — installs free, activate with a key.
  .
- INSTALLS FREE - but relay won't run without a license key.
- To activate: vpntether_manager activate <license-key>
+ Forces every connected device through your VPN tunnel.
  .
- Each license is tied to one device UUID.
+ Features:
+  - Zero-config auto-detection of VPN & hotspot interfaces
+  - Kernel-level NAT engine (TCP/UDP/ICMP)
+  - TCP MSS clamping for optimal MTU
+  - Real-time status app with Iraq flag & Refresh button
+  - Activation UI inside the app — paste your key and go
+  - Each license tied to one device UUID
+ .
+ INSTALLS FREE — relay won't run without a valid license key.
  Contact on WhatsApp to purchase.
 CTRL
 
