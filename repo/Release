@@ -5,3 +5,12 @@ Codename: stable
 Architectures: iphoneos-arm64
 Components: main
 Description: Route hotspot traffic through VPN - per-device license
+MD5Sum:
+ c4acd8b7e0dcd22dcf22e94c74889847 512 Packages
+ c6d99001bbdc0392b50d57e8e6f88a2b 378 Packages.gz
+SHA1:
+ 6b00c72932dd9189dc19a5d82f2a8c9a7799ebf0 512 Packages
+ 1d898efeb7a79ab53ec2902c2c7fe0bb711fb123 378 Packages.gz
+SHA256:
+ 146d6ffafe108e8e877447fdf1a6877e84c72b63aaa91f5c6bc91b47e74c11d8 512 Packages
+ 7b666dab057ed227bce54cdacbdb5df7df53e1ca820a87487849e32b4aa340dd 378 Packages.gz
