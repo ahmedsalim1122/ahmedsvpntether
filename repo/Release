@@ -1,0 +1,7 @@
+Origin: AhmedVPN
+Label: AhmedVPN Tether (SILEO)
+Suite: stable
+Codename: stable
+Architectures: iphoneos-arm64
+Components: main
+Description: Route hotspot traffic through VPN - per-device license
