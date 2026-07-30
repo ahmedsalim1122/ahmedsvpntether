@@ -14,13 +14,14 @@ log() { echo "$(date) $*" >> "$LOG"; }
 # Per-device license check: SHA256("VPNTetherSecret2026" + device_uuid) == stored_license_key
 check_license() {
     local uuid
-    uuid=$(sysctl kern.uuid 2>/dev/null | awk '{print $2}')
+    uuid=$(sysctl kern.uuid 2>/dev/null | cut -d' ' -f2)
     [ -z "$uuid" ] && return 1
     local key
     key=$(cat "$LICENSE_FILE" 2>/dev/null)
     [ -z "$key" ] && return 1
     local expected
-    expected=$(echo -n "VPNTetherSecret2026${uuid}" | sha256sum | awk '{print $1}' | head -c 32)
+    uuid=$(echo "$uuid" | tr '[:upper:]' '[:lower:]')
+    expected=$(echo -n "VPNTetherSecret2026${uuid}" | sha256sum | cut -d' ' -f1 | head -c 32)
     [ "$key" = "$expected" ] && return 0 || return 1
 }
 
@@ -28,10 +29,11 @@ activate_license() {
     local key="$1"
     [ -z "$key" ] && { echo "Usage: vpntether_manager activate <license-key>"; return 1; }
     local uuid
-    uuid=$(sysctl kern.uuid 2>/dev/null | awk '{print $2}')
+    uuid=$(sysctl kern.uuid 2>/dev/null | cut -d' ' -f2)
     [ -z "$uuid" ] && { echo "Cannot get device UUID"; return 1; }
     local expected
-    expected=$(echo -n "VPNTetherSecret2026${uuid}" | sha256sum | awk '{print $1}' | head -c 32)
+    uuid=$(echo "$uuid" | tr '[:upper:]' '[:lower:]')
+    expected=$(echo -n "VPNTetherSecret2026${uuid}" | sha256sum | cut -d' ' -f1 | head -c 32)
     if [ "$key" != "$expected" ]; then
         echo "INVALID LICENSE KEY for this device"
         return 1
@@ -67,11 +69,11 @@ show_status() {
     fi
     local ip=""
     for u in 0 1 2 3 4 5 6 7 8 9; do
-        ip=$(ifconfig "utun$u" 2>/dev/null | grep "inet " | awk '{print $2}')
+        ip=$(ifconfig "utun$u" 2>/dev/null | grep "inet " | tr -s ' ' | cut -d' ' -f3)
         [ -n "$ip" ] && echo "VPN utun: utun$u ($ip)" && break
     done
     [ -z "$ip" ] && echo "VPN utun: NOT FOUND"
-    echo "Hotspot: $(ifconfig bridge100 2>/dev/null | grep 'inet ' | awk '{print $2}')"
+    echo "Hotspot: $(ifconfig bridge100 2>/dev/null | grep 'inet ' | tr -s ' ' | cut -d' ' -f3)"
     count_clients
     echo "Clients: $(cat $CLIENTS_FILE 2>/dev/null || echo 0)"
 }

@@ -39,11 +39,11 @@ show_status() {
     fi
     local ip=""
     for u in 0 1 2 3 4 5 6 7 8 9; do
-        ip=$(ifconfig "utun$u" 2>/dev/null | grep "inet " | awk '{print $2}')
+        ip=$(ifconfig "utun$u" 2>/dev/null | grep "inet " | tr -s ' ' | cut -d' ' -f3)
         [ -n "$ip" ] && echo "VPN utun: utun$u ($ip)" && break
     done
     [ -z "$ip" ] && echo "VPN utun: NOT FOUND"
-    echo "Hotspot: $(ifconfig bridge100 2>/dev/null | grep 'inet ' | awk '{print $2}')"
+    echo "Hotspot: $(ifconfig bridge100 2>/dev/null | grep 'inet ' | tr -s ' ' | cut -d' ' -f3)"
     count_clients
     echo "Clients: $(cat $CLIENTS_FILE 2>/dev/null || echo 0)"
 }
